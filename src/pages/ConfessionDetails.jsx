@@ -313,7 +313,7 @@ export default function ConfessionDetails() {
 
             alert(
                 err.response?.data?.detail ||
-                    "Unable to post your reply. Please try again."
+                "Unable to post your reply. Please try again."
             );
         }
     };
@@ -339,7 +339,7 @@ export default function ConfessionDetails() {
             } else {
                 setError(
                     err.response?.data?.detail ||
-                        "Unable to load this confession."
+                    "Unable to load this confession."
                 );
             }
         } finally {
@@ -431,7 +431,7 @@ export default function ConfessionDetails() {
 
             alert(
                 err.response?.data?.detail ||
-                    "Unable to save your reaction. Please try again."
+                "Unable to save your reaction. Please try again."
             );
         } finally {
             setReacting(false);
@@ -511,7 +511,7 @@ export default function ConfessionDetails() {
 
             alert(
                 err.response?.data?.detail ||
-                    "Unable to post your comment. Please try again."
+                "Unable to post your comment. Please try again."
             );
         } finally {
             setCommentSubmitting(false);
@@ -743,10 +743,10 @@ export default function ConfessionDetails() {
                                     (count) =>
                                         Number(count) === 0
                                 ) && (
-                                    <span className="text-xs text-gray-400 sm:text-sm">
-                                        No reactions yet
-                                    </span>
-                                )}
+                                        <span className="text-xs text-gray-400 sm:text-sm">
+                                            No reactions yet
+                                        </span>
+                                    )}
                             </div>
 
                             <button
@@ -780,7 +780,9 @@ export default function ConfessionDetails() {
                             {/* Reaction Picker */}
 
                             {showReactions && (
-                                <div className="absolute bottom-full left-2 right-2 z-30 mb-2 sm:left-1/2 sm:right-auto sm:w-auto sm:-translate-x-1/2">
+                                <div
+                                    className="absolute bottom-full left-2 right-2 z-30 mb-2 origin-bottom animate-[reactionPickerIn_180ms_cubic-bezier(0.16,1,0.3,1)] sm:left-1/2 sm:right-auto sm:w-auto sm:-translate-x-1/2"
+                                >
                                     <div className="mx-auto flex max-w-full overflow-x-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-xl sm:rounded-full">
                                         {Object.entries(
                                             reactionIcons
@@ -797,12 +799,12 @@ export default function ConfessionDetails() {
                                                     disabled={reacting}
                                                     title={
                                                         reactionLabels[
-                                                            type
+                                                        type
                                                         ]
                                                     }
                                                     aria-label={
                                                         reactionLabels[
-                                                            type
+                                                        type
                                                         ]
                                                     }
                                                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl transition hover:scale-110 hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11 sm:text-[22px]"
@@ -826,18 +828,18 @@ export default function ConfessionDetails() {
                                 <span className="material-symbols-outlined text-[21px] sm:text-[22px]">
                                     {confession.my_reaction
                                         ? reactionMaterialIcons[
-                                              confession.my_reaction
-                                          ] ||
-                                          defaultReactionIcon
+                                        confession.my_reaction
+                                        ] ||
+                                        defaultReactionIcon
                                         : defaultReactionIcon}
                                 </span>
 
                                 <span className="truncate">
                                     {confession.my_reaction
                                         ? reactionLabels[
-                                              confession.my_reaction
-                                          ] ||
-                                          "React"
+                                        confession.my_reaction
+                                        ] ||
+                                        "React"
                                         : "React"}
                                 </span>
                             </button>
@@ -937,7 +939,7 @@ export default function ConfessionDetails() {
                                         const areRepliesVisible =
                                             Boolean(
                                                 visibleReplies[
-                                                    comment.id
+                                                comment.id
                                                 ]
                                             );
 
@@ -1006,12 +1008,11 @@ export default function ConfessionDetails() {
                                                                 >
                                                                     {areRepliesVisible
                                                                         ? "Hide replies"
-                                                                        : `View ${replies.length} ${
-                                                                              replies.length ===
-                                                                              1
-                                                                                  ? "reply"
-                                                                                  : "replies"
-                                                                          }`}
+                                                                        : `View ${replies.length} ${replies.length ===
+                                                                            1
+                                                                            ? "reply"
+                                                                            : "replies"
+                                                                        }`}
                                                                 </button>
                                                             )}
                                                         </div>
@@ -1153,7 +1154,7 @@ export default function ConfessionDetails() {
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg ring-1 ring-gray-200">
                                         {getAvatarIcon(
                                             user.anonymous_avatar ||
-                                                user.avatar
+                                            user.avatar
                                         )}
                                     </div>
 
@@ -1170,7 +1171,7 @@ export default function ConfessionDetails() {
                                                 onKeyDown={(event) => {
                                                     if (
                                                         event.key ===
-                                                            "Enter" &&
+                                                        "Enter" &&
                                                         !event.shiftKey
                                                     ) {
                                                         event.preventDefault();

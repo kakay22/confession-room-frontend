@@ -549,7 +549,7 @@ function ConfessionCard({
                                     ([type]) =>
                                         Number(
                                             counts[
-                                                type
+                                            type
                                             ] || 0
                                         ) > 0
                                 )
@@ -557,12 +557,12 @@ function ConfessionCard({
                                     (a, b) =>
                                         Number(
                                             counts[
-                                                b[0]
+                                            b[0]
                                             ] || 0
                                         ) -
                                         Number(
                                             counts[
-                                                a[0]
+                                            a[0]
                                             ] || 0
                                         )
                                 )
@@ -589,7 +589,7 @@ function ConfessionCard({
                                             "
                                             title={
                                                 reactionLabels[
-                                                    type
+                                                type
                                                 ]
                                             }
                                         >
@@ -642,36 +642,33 @@ function ConfessionCard({
 
                 {isPickerOpen && (
                     <div
-                        className="
-                            absolute
-                            bottom-14
-                            left-1/2
-                            z-40
-                            -translate-x-1/2
-                        "
+                        className=" 
+                        absolute 
+                        bottom-14 
+                        left-1/2 
+                        z-40 
+                        -translate-x-1/2 
+                        origin-bottom 
+                        animate-[reactionPickerIn_180ms_cubic-bezier(0.16,1,0.3,1)] 
+                    "
                         onClick={(event) =>
                             event.stopPropagation()
                         }
                     >
                         <div
-                            className="
-                                flex
-                                max-w-[calc(100vw-24px)]
-                                items-center
-                                gap-0.5
-                                overflow-x-auto
-                                rounded-full
-                                border
-                                border-gray-200
-                                bg-white
-                                px-2 py-2
-                                shadow-2xl
-                                [scrollbar-width:none]
-                                [&::-webkit-scrollbar]:hidden
-
-                                sm:gap-1
-                                sm:px-3
-                            "
+                            className=" 
+                                flex 
+                                h-9 w-9 
+                                shrink-0 
+                                items-center 
+                                justify-center 
+                                rounded-full 
+                                text-lg 
+                                transition-all 
+                                duration-150 
+                                hover:scale-125 
+                                hover:bg-gray-100 
+                                active:scale-95 "
                         >
                             {Object.entries(
                                 reactionIcons
@@ -700,12 +697,12 @@ function ConfessionCard({
                                             }
                                             title={
                                                 reactionLabels[
-                                                    type
+                                                type
                                                 ]
                                             }
                                             aria-label={
                                                 reactionLabels[
-                                                    type
+                                                type
                                                 ]
                                             }
                                             className={`
@@ -724,16 +721,14 @@ function ConfessionCard({
                                                 sm:w-10
                                                 sm:text-xl
 
-                                                ${
-                                                    selected
-                                                        ? "scale-110 bg-blue-50"
-                                                        : ""
+                                                ${selected
+                                                    ? "scale-110 bg-blue-50"
+                                                    : ""
                                                 }
 
-                                                ${
-                                                    reacting
-                                                        ? "cursor-not-allowed opacity-50"
-                                                        : ""
+                                                ${reacting
+                                                    ? "cursor-not-allowed opacity-50"
+                                                    : ""
                                                 }
                                             `}
                                         >
@@ -798,39 +793,37 @@ function ConfessionCard({
                             sm:px-3
                             sm:text-sm
 
-                            ${
-                                myReaction
-                                    ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                            ${myReaction
+                                ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
                             }
 
-                            ${
-                                reacting
-                                    ? "cursor-not-allowed opacity-60"
-                                    : ""
+                            ${reacting
+                                ? "cursor-not-allowed opacity-60"
+                                : ""
                             }
                         `}
                         aria-label={
                             myReaction
                                 ? reactionLabels[
-                                      myReaction
-                                  ] || "React"
+                                myReaction
+                                ] || "React"
                                 : "React"
                         }
                         title={
                             myReaction
                                 ? reactionLabels[
-                                      myReaction
-                                  ] || "React"
+                                myReaction
+                                ] || "React"
                                 : "React"
                         }
                     >
                         <span className="material-symbols-outlined shrink-0 text-[21px] sm:text-[20px]">
                             {myReaction
                                 ? reactionMaterialIcons[
-                                      myReaction
-                                  ] ||
-                                  defaultReactionIcon
+                                myReaction
+                                ] ||
+                                defaultReactionIcon
                                 : defaultReactionIcon}
                         </span>
 
@@ -838,8 +831,8 @@ function ConfessionCard({
                         <span className="hidden sm:inline">
                             {myReaction
                                 ? reactionLabels[
-                                      myReaction
-                                  ] || "React"
+                                myReaction
+                                ] || "React"
                                 : "React"}
                         </span>
                     </button>
@@ -919,48 +912,47 @@ function ConfessionCard({
                             sm:px-3
                             sm:text-sm
 
-                            ${
-                                shareState !== "idle"
-                                    ? "bg-green-50 text-green-600"
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                            ${shareState !== "idle"
+                                ? "bg-green-50 text-green-600"
+                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
                             }
                         `}
                         aria-label={
                             shareState === "copied"
                                 ? "Link copied"
                                 : shareState ===
-                                  "shared"
-                                ? "Shared"
-                                : "Share"
+                                    "shared"
+                                    ? "Shared"
+                                    : "Share"
                         }
                         title={
                             shareState === "copied"
                                 ? "Link copied"
                                 : shareState ===
-                                  "shared"
-                                ? "Shared"
-                                : "Share"
+                                    "shared"
+                                    ? "Shared"
+                                    : "Share"
                         }
                     >
                         <span className="material-symbols-outlined shrink-0 text-[21px] sm:text-[20px]">
                             {shareState ===
-                            "copied"
+                                "copied"
                                 ? "check"
                                 : shareState ===
-                                  "shared"
-                                ? "done"
-                                : "share"}
+                                    "shared"
+                                    ? "done"
+                                    : "share"}
                         </span>
 
                         {/* Desktop only */}
                         <span className="hidden sm:inline">
                             {shareState ===
-                            "copied"
+                                "copied"
                                 ? "Copied"
                                 : shareState ===
-                                  "shared"
-                                ? "Shared"
-                                : "Share"}
+                                    "shared"
+                                    ? "Shared"
+                                    : "Share"}
                         </span>
                     </button>
 
@@ -1255,7 +1247,7 @@ function ConfessionCard({
                         </span>
 
                         {shareState ===
-                        "copied"
+                            "copied"
                             ? "Link copied"
                             : "Ready to share"}
                     </div>

@@ -781,38 +781,83 @@ export default function ConfessionDetails() {
 
                             {showReactions && (
                                 <div
-                                    className="absolute bottom-full left-2 right-2 z-30 mb-2 origin-bottom animate-[reactionPickerIn_180ms_cubic-bezier(0.16,1,0.3,1)] sm:left-1/2 sm:right-auto sm:w-auto sm:-translate-x-1/2"
+                                    className="
+            absolute
+            bottom-full
+            left-0
+            right-0
+            z-30
+            mb-2
+            px-2
+            animate-[reactionPickerIn_180ms_cubic-bezier(0.16,1,0.3,1)]
+            sm:left-1/2
+            sm:right-auto
+            sm:w-auto
+            sm:-translate-x-1/2
+            sm:px-0
+        "
                                 >
-                                    <div className="mx-auto flex max-w-full overflow-x-auto rounded-2xl border border-gray-200 bg-white p-1.5 shadow-xl sm:rounded-full">
-                                        {Object.entries(
-                                            reactionIcons
-                                        ).map(
-                                            ([type, icon]) => (
-                                                <button
-                                                    key={type}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleSelectReaction(
-                                                            type
-                                                        )
-                                                    }
-                                                    disabled={reacting}
-                                                    title={
-                                                        reactionLabels[
-                                                        type
-                                                        ]
-                                                    }
-                                                    aria-label={
-                                                        reactionLabels[
-                                                        type
-                                                        ]
-                                                    }
-                                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl transition hover:scale-110 hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11 sm:text-[22px]"
-                                                >
-                                                    {icon}
-                                                </button>
-                                            )
-                                        )}
+                                    <div
+                                        className="
+                mx-auto
+                flex
+                w-full
+                max-w-full
+                items-center
+                justify-start
+                gap-0.5
+                overflow-x-auto
+                overscroll-x-contain
+                rounded-2xl
+                border
+                border-gray-200
+                bg-white
+                px-2
+                py-2
+                shadow-[0_8px_30px_rgba(0,0,0,0.15)]
+                sm:w-max
+                sm:max-w-none
+                sm:justify-center
+                sm:rounded-full
+                sm:px-2.5
+            "
+                                        style={{
+                                            scrollbarWidth: "none",
+                                            WebkitOverflowScrolling: "touch",
+                                        }}
+                                    >
+                                        {Object.entries(reactionIcons).map(([type, icon]) => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => handleSelectReaction(type)}
+                                                disabled={reacting}
+                                                title={reactionLabels[type]}
+                                                className="
+                        flex
+                        h-11
+                        w-11
+                        min-w-[44px]
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        text-[23px]
+                        transition-all
+                        duration-150
+                        hover:scale-125
+                        hover:bg-gray-100
+                        active:scale-90
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                        sm:h-11
+                        sm:w-11
+                        sm:min-w-[44px]
+                    "
+                                            >
+                                                {icon}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                             )}

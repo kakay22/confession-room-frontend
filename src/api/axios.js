@@ -1,7 +1,6 @@
 import axios from "axios";
 
 const api = axios.create({
-    // baseURL: "http://127.0.0.1:8000/api/",
     baseURL: import.meta.env.VITE_API_URL,
 });
 
@@ -11,6 +10,7 @@ api.interceptors.request.use(
         const accessToken = localStorage.getItem("access");
 
         if (accessToken) {
+            config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${accessToken}`;
         }
 
@@ -29,14 +29,14 @@ api.interceptors.response.use(
         // If access token expired
         if (
             error.response?.status === 401 &&
-            !originalRequest?._retry &&
-            !originalRequest?.url?.includes("auth/login/") &&
-            !originalRequest?.url?.includes("auth/refresh/")
+            originalRequest &&
+            !originalRequest._retry &&
+            !originalRequest.url?.includes("auth/login/") &&
+            !originalRequest.url?.includes("auth/refresh/")
         ) {
             originalRequest._retry = true;
 
-            const refreshToken =
-                localStorage.getItem("refresh");
+            const refreshToken = localStorage.getItem("refresh");
 
             if (!refreshToken) {
                 localStorage.removeItem("access");
@@ -48,20 +48,18 @@ api.interceptors.response.use(
             }
 
             try {
+                // Use the same API base URL for local development
+                // and production deployment.
                 const response = await axios.post(
-                    "http://127.0.0.1:8000/api/auth/refresh/",
+                    `${import.meta.env.VITE_API_URL}auth/refresh/`,
                     {
                         refresh: refreshToken,
                     }
                 );
 
-                const newAccessToken =
-                    response.data.access;
+                const newAccessToken = response.data.access;
 
-                localStorage.setItem(
-                    "access",
-                    newAccessToken
-                );
+                localStorage.setItem("access", newAccessToken);
 
                 // Update Authorization header
                 originalRequest.headers =
@@ -76,8 +74,7 @@ api.interceptors.response.use(
             } catch (refreshError) {
                 console.error(
                     "TOKEN REFRESH FAILED:",
-                    refreshError.response?.data ||
-                        refreshError
+                    refreshError.response?.data || refreshError
                 );
 
                 localStorage.removeItem("access");
@@ -85,9 +82,7 @@ api.interceptors.response.use(
 
                 window.location.href = "/login";
 
-                return Promise.reject(
-                    refreshError
-                );
+                return Promise.reject(refreshError);
             }
         }
 

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.3.1",
+    "@photo-sphere-viewer/core": "^5.15.1",
     "@tailwindcss/vite": "^4.3.3",
     "axios": "^1.20.0",
     "bootstrap": "^5.3.8",

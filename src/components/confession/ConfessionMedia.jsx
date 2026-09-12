@@ -1,14 +1,180 @@
-function ConfessionMedia({ confession, onImageClick }) {
+import { useEffect, useRef } from "react";
+import { Viewer } from "@photo-sphere-viewer/core";
+import "@photo-sphere-viewer/core/index.css";
+
+
+function PanoramaViewer({ src, mediaId }) {
+    const containerRef = useRef(null);
+    const viewerRef = useRef(null);
+
+    useEffect(() => {
+        if (!containerRef.current || !src) {
+            return;
+        }
+
+        /*
+         * Create the 360° viewer.
+         */
+        viewerRef.current = new Viewer({
+            container: containerRef.current,
+
+            panorama: src,
+
+            navbar: [
+                "zoom",
+                "fullscreen",
+            ],
+
+            defaultZoomLvl: 50,
+
+            touchmoveTwoFingers: false,
+
+            mousewheelCtrlKey: false,
+
+            loadingImg: undefined,
+
+            lang: {
+                zoom: "Zoom",
+                fullscreen: "Fullscreen",
+            },
+        });
+
+        /*
+         * Log successful panorama loading.
+         */
+        viewerRef.current.addEventListener(
+            "ready",
+            () => {
+                console.log(
+                    "PANORAMA LOADED:",
+                    src
+                );
+            }
+        );
+
+        /*
+         * Log panorama loading errors.
+         */
+        viewerRef.current.addEventListener(
+            "error",
+            (event) => {
+                console.error(
+                    "PANORAMA LOAD ERROR:",
+                    src,
+                    event
+                );
+            }
+        );
+
+        /*
+         * Cleanup viewer when component disappears.
+         */
+        return () => {
+            if (viewerRef.current) {
+                viewerRef.current.destroy();
+                viewerRef.current = null;
+            }
+        };
+    }, [src, mediaId]);
+
+    return (
+        <div
+            className="
+                relative
+                overflow-hidden
+                rounded-2xl
+                bg-black
+            "
+        >
+            {/* 360° viewer */}
+            <div
+                ref={containerRef}
+                className="
+                    h-[420px]
+                    w-full
+                    sm:h-[500px]
+                    md:h-[560px]
+                "
+            />
+
+            {/* Panorama label */}
+            <div
+                className="
+                    pointer-events-none
+                    absolute
+                    left-3
+                    top-3
+                    z-10
+                    flex
+                    items-center
+                    gap-2
+                    rounded-full
+                    bg-black/60
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-medium
+                    text-white
+                    backdrop-blur-sm
+                "
+            >
+                <span className="material-symbols-outlined text-[16px]">
+                    360
+                </span>
+
+                <span>
+                    360° Photo
+                </span>
+            </div>
+
+            {/* Drag instruction */}
+            <div
+                className="
+                    pointer-events-none
+                    absolute
+                    bottom-3
+                    left-1/2
+                    z-10
+                    -translate-x-1/2
+                    rounded-full
+                    bg-black/60
+                    px-3
+                    py-1.5
+                    text-xs
+                    text-white
+                    backdrop-blur-sm
+                "
+            >
+                Drag to look around
+            </div>
+        </div>
+    );
+}
+
+
+function ConfessionMedia({
+    confession,
+    onImageClick,
+}) {
+
     /*
-     * Convert the media URL returned by Django into a URL
-     * that the browser can actually load.
+     * Convert the media URL returned by Django
+     * into a URL that the browser can load.
      */
     const getMediaUrl = (url) => {
         if (!url) {
             return null;
         }
 
-        // Already an absolute URL
+        /*
+         * Already an absolute URL.
+         *
+         * Your production API currently returns:
+         *
+         * https://confessionroom.pythonanywhere.com/media/...
+         *
+         * so we return it exactly as-is.
+         */
         if (
             url.startsWith("http://") ||
             url.startsWith("https://") ||
@@ -17,10 +183,15 @@ function ConfessionMedia({ confession, onImageClick }) {
             return url;
         }
 
-        // Django backend
-        const backendUrl = "http://127.0.0.1:8000";
+        /*
+         * Only use localhost for relative URLs.
+         *
+         * Example:
+         * /media/confessions/image.jpg
+         */
+        const backendUrl =
+            "http://127.0.0.1:8000";
 
-        // Make sure there is exactly one slash
         if (url.startsWith("/")) {
             return `${backendUrl}${url}`;
         }
@@ -30,7 +201,7 @@ function ConfessionMedia({ confession, onImageClick }) {
 
 
     /*
-     * No media
+     * No media.
      */
     if (
         !confession?.media ||
@@ -46,18 +217,22 @@ function ConfessionMedia({ confession, onImageClick }) {
 
             {confession.media.map((media) => {
 
-                const mediaUrl = getMediaUrl(media.url);
+                const mediaUrl =
+                    getMediaUrl(media.url);
 
                 if (!mediaUrl) {
                     return null;
                 }
 
 
-                {/* =================================================
-                    IMAGE
-                ================================================= */}
-
-                if (media.media_type === "IMAGE") {
+                /*
+                 * =================================================
+                 * NORMAL IMAGE
+                 * =================================================
+                 */
+                if (
+                    media.media_type === "IMAGE"
+                ) {
                     return (
                         <div
                             key={media.id}
@@ -70,7 +245,9 @@ function ConfessionMedia({ confession, onImageClick }) {
                             <button
                                 type="button"
                                 onClick={() =>
-                                    onImageClick?.(mediaUrl)
+                                    onImageClick?.(
+                                        mediaUrl
+                                    )
                                 }
                                 className="
                                     block
@@ -104,27 +281,59 @@ function ConfessionMedia({ confession, onImageClick }) {
                 }
 
 
-                {/* =================================================
-                    AUDIO
-                ================================================= */}
-
-                if (media.media_type === "AUDIO") {
-
-                    const duration = Number(
-                        media.duration || 0
+                /*
+                 * =================================================
+                 * 360° PANORAMA
+                 * =================================================
+                 */
+                if (
+                    media.media_type === "PANORAMA"
+                ) {
+                    return (
+                        <div
+                            key={media.id}
+                            className="
+                                overflow-hidden
+                                rounded-2xl
+                                bg-black
+                            "
+                        >
+                            <PanoramaViewer
+                                src={mediaUrl}
+                                mediaId={media.id}
+                            />
+                        </div>
                     );
+                }
 
-                    const minutes = Math.floor(
-                        duration / 60
-                    )
-                        .toString()
-                        .padStart(2, "0");
 
-                    const seconds = Math.floor(
-                        duration % 60
-                    )
-                        .toString()
-                        .padStart(2, "0");
+                /*
+                 * =================================================
+                 * AUDIO
+                 * =================================================
+                 */
+                if (
+                    media.media_type === "AUDIO"
+                ) {
+
+                    const duration =
+                        Number(
+                            media.duration || 0
+                        );
+
+                    const minutes =
+                        Math.floor(
+                            duration / 60
+                        )
+                            .toString()
+                            .padStart(2, "0");
+
+                    const seconds =
+                        Math.floor(
+                            duration % 60
+                        )
+                            .toString()
+                            .padStart(2, "0");
 
 
                     return (
@@ -171,12 +380,24 @@ function ConfessionMedia({ confession, onImageClick }) {
 
                                 <div className="min-w-0">
 
-                                    <p className="text-sm font-semibold text-gray-900">
+                                    <p
+                                        className="
+                                            text-sm
+                                            font-semibold
+                                            text-gray-900
+                                        "
+                                    >
                                         Voice confession
                                     </p>
 
+
                                     {duration > 0 && (
-                                        <p className="text-xs text-gray-400">
+                                        <p
+                                            className="
+                                                text-xs
+                                                text-gray-400
+                                            "
+                                        >
                                             {minutes}:{seconds}
                                         </p>
                                     )}
@@ -212,6 +433,15 @@ function ConfessionMedia({ confession, onImageClick }) {
                     );
                 }
 
+
+                /*
+                 * Unknown media type.
+                 */
+                console.warn(
+                    "UNKNOWN MEDIA TYPE:",
+                    media.media_type,
+                    media
+                );
 
                 return null;
             })}

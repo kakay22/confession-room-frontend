@@ -11,6 +11,9 @@ function CreateConfession() {
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
 
+    const [panoramaFile, setPanoramaFile] = useState(null);
+    const [panoramaPreview, setPanoramaPreview] = useState("");
+
     const [audioBlob, setAudioBlob] = useState(null);
     const [audioPreview, setAudioPreview] = useState("");
 
@@ -21,6 +24,7 @@ function CreateConfession() {
     const [error, setError] = useState("");
 
     const fileInputRef = useRef(null);
+    const panoramaInputRef = useRef(null);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const recordingTimerRef = useRef(null);
@@ -63,6 +67,66 @@ function CreateConfession() {
         setImagePreview(previewUrl);
     };
 
+    const handlePanoramaChange = (e) => {
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        setError("");
+
+        // 20 MB limit for 360° photos
+        if (file.size > 20 * 1024 * 1024) {
+            setError("360° panorama must be smaller than 20 MB.");
+
+            e.target.value = "";
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            setError("Please select a valid 360° image.");
+
+            e.target.value = "";
+            return;
+        }
+
+        // Read the image dimensions
+        const image = new Image();
+
+        image.onload = () => {
+            const ratio = image.width / image.height;
+
+            /*
+             * Equirectangular 360° images are normally
+             * approximately 2:1.
+             */
+            if (ratio < 1.7 || ratio > 2.3) {
+                setError(
+                    "This image does not appear to be a 360° panorama. " +
+                    "Please upload an equirectangular 360° photo."
+                );
+
+                e.target.value = "";
+                return;
+            }
+
+            if (panoramaPreview) {
+                URL.revokeObjectURL(panoramaPreview);
+            }
+
+            setPanoramaFile(file);
+
+            const previewUrl = URL.createObjectURL(file);
+            setPanoramaPreview(previewUrl);
+        };
+
+        image.onerror = () => {
+            setError("Unable to read this panorama image.");
+            e.target.value = "";
+        };
+
+        image.src = URL.createObjectURL(file);
+    };
+
     const removeImage = () => {
         setImageFile(null);
 
@@ -74,6 +138,20 @@ function CreateConfession() {
 
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
+        }
+    };
+
+    const removePanorama = () => {
+        setPanoramaFile(null);
+
+        if (panoramaPreview) {
+            URL.revokeObjectURL(panoramaPreview);
+        }
+
+        setPanoramaPreview("");
+
+        if (panoramaInputRef.current) {
+            panoramaInputRef.current.value = "";
         }
     };
 
@@ -183,6 +261,10 @@ function CreateConfession() {
     const removeAudio = () => {
         setAudioBlob(null);
 
+        if (panoramaPreview) {
+            URL.revokeObjectURL(panoramaPreview);
+        }
+
         if (audioPreview) {
             URL.revokeObjectURL(audioPreview);
         }
@@ -207,6 +289,10 @@ function CreateConfession() {
 
         if (type !== "IMAGE") {
             removeImage();
+        }
+
+        if (type !== "PANORAMA") {
+            removePanorama();
         }
 
         if (type !== "AUDIO") {
@@ -239,6 +325,19 @@ function CreateConfession() {
 
         if (postType === "IMAGE" && !imageFile) {
             setError("Please select an image.");
+
+            return;
+        }
+
+        if (postType === "PANORAMA" && panoramaFile) {
+            formData.append(
+                "media",
+                panoramaFile
+            );
+        }
+
+        if (postType === "PANORAMA" && !panoramaFile) {
+            setError("Please select a 360° panorama.");
 
             return;
         }
@@ -373,12 +472,12 @@ function CreateConfession() {
             if (
                 mediaRecorderRef.current &&
                 mediaRecorderRef.current.state !==
-                    "inactive"
+                "inactive"
             ) {
                 mediaRecorderRef.current.stop();
             }
         };
-    }, [imagePreview, audioPreview]);
+    }, [imagePreview, panoramaPreview, audioPreview]);
 
     /*
     =========================================
@@ -420,6 +519,12 @@ function CreateConfession() {
             label: "Image",
             description: "Share a photo",
             icon: "image",
+        },
+        {
+            value: "PANORAMA",
+            label: "360°",
+            description: "Share a 360° photo",
+            icon: "360",
         },
         {
             value: "AUDIO",
@@ -557,7 +662,7 @@ function CreateConfession() {
                             </div>
 
 
-                            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
 
                                 {postTypes.map((type) => {
                                     const active =
@@ -573,18 +678,16 @@ function CreateConfession() {
                                                     type.value
                                                 )
                                             }
-                                            className={`group flex min-h-[88px] flex-col items-center justify-center rounded-xl border p-2.5 text-center transition active:scale-[0.98] sm:min-h-[100px] sm:rounded-2xl sm:p-3 ${
-                                                active
-                                                    ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
-                                                    : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
-                                            }`}
+                                            className={`group flex min-h-[88px] flex-col items-center justify-center rounded-xl border p-2.5 text-center transition active:scale-[0.98] sm:min-h-[100px] sm:rounded-2xl sm:p-3 ${active
+                                                ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
+                                                : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+                                                }`}
                                         >
                                             <span
-                                                className={`material-symbols-outlined mb-1.5 text-[24px] sm:text-[26px] ${
-                                                    active
-                                                        ? "text-blue-600"
-                                                        : "text-gray-400 group-hover:text-gray-600"
-                                                }`}
+                                                className={`material-symbols-outlined mb-1.5 text-[24px] sm:text-[26px] ${active
+                                                    ? "text-blue-600"
+                                                    : "text-gray-400 group-hover:text-gray-600"
+                                                    }`}
                                             >
                                                 {type.icon}
                                             </span>
@@ -632,12 +735,11 @@ function CreateConfession() {
                                     </label>
 
                                     <span
-                                        className={`text-xs ${
-                                            content.length >=
+                                        className={`text-xs ${content.length >=
                                             1900
-                                                ? "font-semibold text-orange-500"
-                                                : "text-gray-400"
-                                        }`}
+                                            ? "font-semibold text-orange-500"
+                                            : "text-gray-400"
+                                            }`}
                                     >
                                         {content.length}/2000
                                     </span>
@@ -769,12 +871,12 @@ function CreateConfession() {
                                                     <p className="mt-0.5 text-[11px] text-gray-400">
                                                         {imageFile
                                                             ? `${(
-                                                                  imageFile.size /
-                                                                  1024 /
-                                                                  1024
-                                                              ).toFixed(
-                                                                  2
-                                                              )} MB`
+                                                                imageFile.size /
+                                                                1024 /
+                                                                1024
+                                                            ).toFixed(
+                                                                2
+                                                            )} MB`
                                                             : ""}
                                                     </p>
                                                 </div>
@@ -795,6 +897,133 @@ function CreateConfession() {
                                         </div>
                                     )}
 
+                                </div>
+                            )}
+
+
+                            {/* =========================================
+                                PANORAMA
+                            ========================================= */}
+                            {postType === "PANORAMA" && (
+                                <div>
+                                    <input
+                                        ref={panoramaInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={handlePanoramaChange}
+                                        className="hidden"
+                                    />
+
+                                    {!panoramaPreview ? (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                panoramaInputRef.current?.click()
+                                            }
+                                            className="flex min-h-[220px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-center transition hover:border-indigo-300 hover:bg-indigo-50 active:scale-[0.995] sm:min-h-[260px]"
+                                        >
+                                            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+                                                <span className="material-symbols-outlined text-[30px] text-gray-400">
+                                                    360
+                                                </span>
+                                            </div>
+
+                                            <span className="text-sm font-bold text-gray-700 sm:text-base">
+                                                Add a 360° panorama
+                                            </span>
+
+                                            <span className="mt-1 text-xs text-gray-400">
+                                                Equirectangular JPG, PNG or WEBP
+                                            </span>
+
+                                            <span className="mt-0.5 text-[11px] text-gray-400">
+                                                Maximum file size: 20 MB
+                                            </span>
+
+                                            <span className="mt-3 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-sm ring-1 ring-gray-100">
+                                                Choose panorama
+                                            </span>
+                                        </button>
+                                    ) : (
+                                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
+
+                                            <div className="relative">
+
+                                                <img
+                                                    src={panoramaPreview}
+                                                    alt="Selected 360° panorama"
+                                                    className="max-h-[360px] w-full object-contain"
+                                                />
+
+                                                <div className="absolute inset-x-0 top-0 flex items-start justify-between bg-gradient-to-b from-black/50 to-transparent p-3">
+
+                                                    <span className="rounded-full bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+                                                        360° panorama
+                                                    </span>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={removePanorama}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition hover:bg-black/80 active:scale-95"
+                                                        aria-label="Remove panorama"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">
+                                                            close
+                                                        </span>
+                                                    </button>
+
+                                                </div>
+
+                                            </div>
+
+                                            <div className="flex items-center justify-between gap-3 bg-white px-3 py-2.5 sm:px-4">
+
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-xs font-semibold text-gray-700">
+                                                        {panoramaFile?.name}
+                                                    </p>
+
+                                                    <p className="mt-0.5 text-[11px] text-gray-400">
+                                                        {panoramaFile
+                                                            ? `${(
+                                                                panoramaFile.size /
+                                                                1024 /
+                                                                1024
+                                                            ).toFixed(2)} MB`
+                                                            : ""}
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        panoramaInputRef.current?.click()
+                                                    }
+                                                    className="shrink-0 rounded-lg px-3 py-2 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-50"
+                                                >
+                                                    Change
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+                                    )}
+
+                                    <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
+                                        <div className="flex items-start gap-2.5">
+
+                                            <span className="material-symbols-outlined mt-0.5 text-[18px] text-indigo-500">
+                                                swipe
+                                            </span>
+
+                                            <p className="text-xs leading-5 text-gray-500">
+                                                Upload a 360° equirectangular photo.
+                                                People will be able to drag or swipe around
+                                                the image after you post it.
+                                            </p>
+
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 

@@ -538,7 +538,7 @@ function ConfessionCard({
                 REACTION SUMMARY
             ================================================= */}
 
-            {total > 0 && (
+            {(total > 0 || commentCount > 0) && (
                 <div className="mt-4 flex items-center justify-between">
                     <div className="flex min-w-0 items-center gap-2">
                         <div className="flex -space-x-1">

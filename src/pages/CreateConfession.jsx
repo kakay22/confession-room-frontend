@@ -916,7 +916,6 @@ function CreateConfession() {
                             ========================================= */}
                             {postType === "PANORAMA" && (
                                 <div>
-                                    {/* Regular panorama file upload */}
                                     <input
                                         ref={panoramaInputRef}
                                         type="file"
@@ -925,83 +924,36 @@ function CreateConfession() {
                                         className="hidden"
                                     />
 
-                                    {/* Camera capture */}
-                                    <input
-                                        ref={panoramaCameraInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        capture="environment"
-                                        onChange={handlePanoramaCameraChange}
-                                        className="hidden"
-                                    />
-
                                     {!panoramaPreview ? (
-                                        <div className="space-y-3">
-
-                                            {/* CAMERA BUTTON */}
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    panoramaCameraInputRef.current?.click()
-                                                }
-                                                className="flex min-h-[190px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/60 px-4 py-8 text-center transition hover:border-indigo-400 hover:bg-indigo-50 active:scale-[0.995] sm:min-h-[220px]"
-                                            >
-                                                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-indigo-100">
-                                                    <span className="material-symbols-outlined text-[30px] text-indigo-500">
-                                                        photo_camera
-                                                    </span>
-                                                </div>
-
-                                                <span className="text-sm font-bold text-gray-800 sm:text-base">
-                                                    Open camera
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                panoramaInputRef.current?.click()
+                                            }
+                                            className="flex min-h-[220px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-center transition hover:border-indigo-300 hover:bg-indigo-50 active:scale-[0.995] sm:min-h-[260px]"
+                                        >
+                                            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+                                                <span className="material-symbols-outlined text-[30px] text-gray-400">
+                                                    360
                                                 </span>
-
-                                                <span className="mt-1 text-xs text-gray-500">
-                                                    Take a panorama with your device camera
-                                                </span>
-
-                                                <span className="mt-3 rounded-full bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm">
-                                                    Open 360 Camera
-                                                </span>
-                                            </button>
-
-                                            {/* OR */}
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-px flex-1 bg-gray-200" />
-
-                                                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                                                    or
-                                                </span>
-
-                                                <div className="h-px flex-1 bg-gray-200" />
                                             </div>
 
-                                            {/* FILE UPLOAD BUTTON */}
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    panoramaInputRef.current?.click()
-                                                }
-                                                className="flex min-h-[100px] w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-5 text-center transition hover:border-gray-300 hover:bg-gray-50 active:scale-[0.995]"
-                                            >
-                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-50 ring-1 ring-gray-100">
-                                                    <span className="material-symbols-outlined text-[24px] text-gray-500">
-                                                        upload_file
-                                                    </span>
-                                                </div>
+                                            <span className="text-sm font-bold text-gray-700 sm:text-base">
+                                                Add a panorama
+                                            </span>
 
-                                                <div className="text-left">
-                                                    <span className="block text-sm font-bold text-gray-700">
-                                                        Upload panorama file
-                                                    </span>
+                                            <span className="mt-1 text-xs text-gray-400">
+                                                360° equirectangular or wide panorama · JPG, PNG or WEBP
+                                            </span>
 
-                                                    <span className="mt-0.5 block text-xs text-gray-400">
-                                                        JPG, PNG or WEBP · Maximum 20 MB
-                                                    </span>
-                                                </div>
-                                            </button>
+                                            <span className="mt-0.5 text-[11px] text-gray-400">
+                                                Maximum file size: 20 MB
+                                            </span>
 
-                                        </div>
+                                            <span className="mt-3 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-sm ring-1 ring-gray-100">
+                                                Choose panorama
+                                            </span>
+                                        </button>
                                     ) : (
                                         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
 

@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Viewer } from "@photo-sphere-viewer/core";
+import "@photo-sphere-viewer/core/index.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
@@ -118,9 +120,142 @@ const getMediaUrl = (url) => {
 | Confession Media
 |--------------------------------------------------------------------------
 */
+function PanoramaViewer({ src, mediaId }) {
+    const containerRef = useRef(null);
+    const viewerRef = useRef(null);
 
-function ConfessionMedia({ confession, onImageClick }) {
-    if (!confession?.media || !Array.isArray(confession.media)) {
+    useEffect(() => {
+        if (!containerRef.current || !src) {
+            return;
+        }
+
+        viewerRef.current = new Viewer({
+            container: containerRef.current,
+            panorama: src,
+
+            navbar: [
+                "zoom",
+                "fullscreen",
+            ],
+
+            defaultZoomLvl: 50,
+
+            touchmoveTwoFingers: false,
+
+            mousewheelCtrlKey: false,
+        });
+
+        viewerRef.current.addEventListener(
+            "ready",
+            () => {
+                console.log(
+                    "PANORAMA LOADED:",
+                    src
+                );
+            }
+        );
+
+        viewerRef.current.addEventListener(
+            "error",
+            (event) => {
+                console.error(
+                    "PANORAMA LOAD ERROR:",
+                    src,
+                    event
+                );
+            }
+        );
+
+        return () => {
+            if (viewerRef.current) {
+                viewerRef.current.destroy();
+                viewerRef.current = null;
+            }
+        };
+    }, [src, mediaId]);
+
+    return (
+        <div
+            className="
+                relative
+                overflow-hidden
+                rounded-xl
+                bg-black
+                sm:rounded-2xl
+            "
+        >
+            <div
+                ref={containerRef}
+                className="
+                    h-[420px]
+                    w-full
+                    sm:h-[500px]
+                    md:h-[560px]
+                "
+            />
+
+            <div
+                className="
+                    pointer-events-none
+                    absolute
+                    left-3
+                    top-3
+                    z-10
+                    flex
+                    items-center
+                    gap-1.5
+                    rounded-full
+                    bg-black/60
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-medium
+                    text-white
+                    backdrop-blur-sm
+                "
+            >
+                <span className="material-symbols-outlined text-[16px]">
+                    360
+                </span>
+
+                <span>
+                    360° Photo
+                </span>
+            </div>
+
+            <div
+                className="
+                    pointer-events-none
+                    absolute
+                    bottom-3
+                    left-1/2
+                    z-10
+                    -translate-x-1/2
+                    whitespace-nowrap
+                    rounded-full
+                    bg-black/60
+                    px-3
+                    py-1.5
+                    text-xs
+                    text-white
+                    backdrop-blur-sm
+                "
+            >
+                Drag to look around
+            </div>
+        </div>
+    );
+}
+
+
+function ConfessionMedia({
+    confession,
+    onImageClick,
+}) {
+    if (
+        !confession?.media ||
+        !Array.isArray(confession.media)
+    ) {
         return null;
     }
 
@@ -130,59 +265,180 @@ function ConfessionMedia({ confession, onImageClick }) {
 
     return (
         <div className="mt-4 space-y-3">
+
             {confession.media.map((media, index) => {
-                const mediaUrl = getMediaUrl(media.url);
-                const mediaType = String(media.media_type || "").toUpperCase();
+
+                const mediaUrl =
+                    getMediaUrl(media.url);
+
+                const mediaType =
+                    String(
+                        media.media_type || ""
+                    ).toUpperCase();
 
                 if (!mediaUrl) {
                     return null;
                 }
 
+
+                /*
+                 * =================================================
+                 * NORMAL IMAGE
+                 * =================================================
+                 */
                 if (mediaType === "IMAGE") {
                     return (
                         <button
-                            key={media.id || index}
+                            key={
+                                media.id || index
+                            }
                             type="button"
-                            onClick={() => onImageClick(mediaUrl)}
-                            className="group block w-full overflow-hidden rounded-xl bg-gray-100 text-left sm:rounded-2xl"
+                            onClick={() =>
+                                onImageClick(mediaUrl)
+                            }
+                            className="
+                                group
+                                block
+                                w-full
+                                overflow-hidden
+                                rounded-xl
+                                bg-gray-100
+                                text-left
+                                sm:rounded-2xl
+                            "
                         >
                             <img
                                 src={mediaUrl}
                                 alt="Confession attachment"
                                 loading="lazy"
-                                className="block max-h-[420px] w-full object-contain transition duration-200 group-hover:scale-[1.01] sm:max-h-[600px]"
+                                className="
+                                    block
+                                    max-h-[420px]
+                                    w-full
+                                    object-contain
+                                    transition
+                                    duration-200
+                                    group-hover:scale-[1.01]
+                                    sm:max-h-[600px]
+                                "
                             />
                         </button>
                     );
                 }
 
+
+                /*
+                 * =================================================
+                 * 360° PANORAMA
+                 * =================================================
+                 */
+                if (mediaType === "PANORAMA") {
+                    return (
+                        <PanoramaViewer
+                            key={
+                                media.id || index
+                            }
+                            src={mediaUrl}
+                            mediaId={
+                                media.id || index
+                            }
+                        />
+                    );
+                }
+
+
+                /*
+                 * =================================================
+                 * AUDIO
+                 * =================================================
+                 */
                 if (mediaType === "AUDIO") {
                     return (
                         <div
-                            key={media.id || index}
-                            className="rounded-xl border border-gray-200 bg-gray-50 p-3 sm:rounded-2xl sm:p-4"
+                            key={
+                                media.id || index
+                            }
+                            className="
+                                rounded-xl
+                                border
+                                border-gray-200
+                                bg-gray-50
+                                p-3
+                                sm:rounded-2xl
+                                sm:p-4
+                            "
                         >
-                            <div className="mb-2.5 flex items-center gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-200">
-                                    <span className="material-symbols-outlined text-[22px] text-gray-700">
+                            <div
+                                className="
+                                    mb-2.5
+                                    flex
+                                    items-center
+                                    gap-3
+                                "
+                            >
+                                <div
+                                    className="
+                                        flex
+                                        h-10
+                                        w-10
+                                        shrink-0
+                                        items-center
+                                        justify-center
+                                        rounded-full
+                                        bg-white
+                                        shadow-sm
+                                        ring-1
+                                        ring-gray-200
+                                    "
+                                >
+                                    <span
+                                        className="
+                                            material-symbols-outlined
+                                            text-[22px]
+                                            text-gray-700
+                                        "
+                                    >
                                         mic
                                     </span>
                                 </div>
 
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-gray-800">
+                                    <p
+                                        className="
+                                            truncate
+                                            text-sm
+                                            font-semibold
+                                            text-gray-800
+                                        "
+                                    >
                                         Voice confession
                                     </p>
 
                                     {media.duration && (
-                                        <p className="mt-0.5 text-xs text-gray-500">
-                                            {Math.floor(media.duration / 60)
+                                        <p
+                                            className="
+                                                mt-0.5
+                                                text-xs
+                                                text-gray-500
+                                            "
+                                        >
+                                            {Math.floor(
+                                                media.duration / 60
+                                            )
                                                 .toString()
-                                                .padStart(2, "0")}
+                                                .padStart(
+                                                    2,
+                                                    "0"
+                                                )}
                                             :
-                                            {Math.floor(media.duration % 60)
+                                            {Math.floor(
+                                                media.duration % 60
+                                            )
                                                 .toString()
-                                                .padStart(2, "0")}
+                                                .padStart(
+                                                    2,
+                                                    "0"
+                                                )}
                                         </p>
                                     )}
                                 </div>
@@ -194,7 +450,8 @@ function ConfessionMedia({ confession, onImageClick }) {
                                 src={mediaUrl}
                                 className="h-10 w-full"
                             >
-                                Your browser does not support audio playback.
+                                Your browser does not support
+                                audio playback.
                             </audio>
                         </div>
                     );

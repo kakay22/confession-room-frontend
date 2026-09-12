@@ -13,6 +13,7 @@ function CreateConfession() {
 
     const [panoramaFile, setPanoramaFile] = useState(null);
     const [panoramaPreview, setPanoramaPreview] = useState("");
+    const [panoramaKind, setPanoramaKind] = useState("");
 
     const [audioBlob, setAudioBlob] = useState(null);
     const [audioPreview, setAudioPreview] = useState("");
@@ -74,54 +75,66 @@ function CreateConfession() {
 
         setError("");
 
-        // 20 MB limit for 360° photos
         if (file.size > 20 * 1024 * 1024) {
-            setError("360° panorama must be smaller than 20 MB.");
-
+            setError("Panorama must be smaller than 20 MB.");
             e.target.value = "";
             return;
         }
 
         if (!file.type.startsWith("image/")) {
-            setError("Please select a valid 360° image.");
-
+            setError("Please select a valid panorama image.");
             e.target.value = "";
             return;
         }
 
-        // Read the image dimensions
         const image = new Image();
 
         image.onload = () => {
-            const ratio = image.width / image.height;
+            const width = image.width;
+            const height = image.height;
+            const ratio = width / height;
 
             /*
-             * Equirectangular 360° images are normally
-             * approximately 2:1.
+             * True 360° equirectangular panorama:
+             * approximately 2:1
+             *
+             * Wide/partial panorama:
+             * wider than a normal landscape image.
              */
-            if (ratio < 1.7 || ratio > 2.3) {
+
+            if (ratio < 1.5) {
                 setError(
-                    "This image does not appear to be a 360° panorama. " +
-                    "Please upload an equirectangular 360° photo."
+                    "Please upload a wide panorama image. " +
+                    "True 360° photos should be close to a 2:1 ratio."
                 );
 
                 e.target.value = "";
+                URL.revokeObjectURL(image.src);
                 return;
             }
+
+            const kind =
+                ratio >= 1.7 && ratio <= 2.3
+                    ? "360"
+                    : "WIDE";
 
             if (panoramaPreview) {
                 URL.revokeObjectURL(panoramaPreview);
             }
 
-            setPanoramaFile(file);
-
             const previewUrl = URL.createObjectURL(file);
+
+            setPanoramaFile(file);
             setPanoramaPreview(previewUrl);
+            setPanoramaKind(kind);
+
+            URL.revokeObjectURL(image.src);
         };
 
         image.onerror = () => {
             setError("Unable to read this panorama image.");
             e.target.value = "";
+            URL.revokeObjectURL(image.src);
         };
 
         image.src = URL.createObjectURL(file);
@@ -259,18 +272,18 @@ function CreateConfession() {
     };
 
     const removeAudio = () => {
-        setAudioBlob(null);
-
-        if (panoramaPreview) {
-            URL.revokeObjectURL(panoramaPreview);
-        }
-
         if (audioPreview) {
             URL.revokeObjectURL(audioPreview);
         }
 
+        setAudioBlob(null);
         setAudioPreview("");
         setRecordingSeconds(0);
+
+        if (recordingTimerRef.current) {
+            clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+        }
     };
 
     /*
@@ -311,107 +324,79 @@ function CreateConfession() {
 
         setError("");
 
-        const trimmedContent = content.trim();
-
-        if (!trimmedContent) {
-            setError(
-                postType === "TEXT"
-                    ? "Please write something first."
-                    : "Please add a caption."
-            );
-
+        if (!content.trim()) {
+            setError("Please write something before posting.");
             return;
         }
 
         if (postType === "IMAGE" && !imageFile) {
             setError("Please select an image.");
-
             return;
         }
 
-        if (postType === "PANORAMA" && panoramaFile) {
-            formData.append(
-                "media",
-                panoramaFile
-            );
-        }
-
         if (postType === "PANORAMA" && !panoramaFile) {
-            setError("Please select a 360° panorama.");
-
+            setError("Please select a panorama.");
             return;
         }
 
         if (postType === "AUDIO" && !audioBlob) {
-            setError("Please record a voice message.");
-
+            setError("Please record your voice first.");
             return;
         }
 
-        if (
-            postType === "AUDIO" &&
-            recordingSeconds < 1
-        ) {
-            setError("Voice recording is too short.");
-
+        if (postType === "AUDIO" && recordingSeconds < 1) {
+            setError("Your recording is too short.");
             return;
         }
 
         setLoading(true);
 
         try {
+            // IMPORTANT:
+            // Create FormData BEFORE using formData.append()
             const formData = new FormData();
 
-            formData.append(
-                "content",
-                trimmedContent
-            );
+            formData.append("content", content.trim());
+            formData.append("confession_type", postType);
 
-            formData.append(
-                "confession_type",
-                postType
-            );
-
+            // IMAGE
             if (postType === "IMAGE" && imageFile) {
-                formData.append(
-                    "media",
-                    imageFile
-                );
+                formData.append("media", imageFile);
             }
 
+            // PANORAMA
+            if (postType === "PANORAMA" && panoramaFile) {
+                formData.append("media", panoramaFile);
+
+                if (panoramaKind) {
+                    formData.append("panorama_kind", panoramaKind);
+                }
+            }
+
+            // AUDIO
             if (postType === "AUDIO" && audioBlob) {
                 const audioFile = new File(
                     [audioBlob],
                     "voice-confession.webm",
                     {
-                        type:
-                            audioBlob.type ||
-                            "audio/webm",
+                        type: audioBlob.type || "audio/webm",
                     }
                 );
 
-                formData.append(
-                    "media",
-                    audioFile
-                );
-
+                formData.append("media", audioFile);
                 formData.append(
                     "media_duration",
-                    recordingSeconds
+                    recordingSeconds.toString()
                 );
             }
 
-            await api.post(
-                "confessions/",
-                formData,
-                {
-                    headers: {
-                        "Content-Type":
-                            "multipart/form-data",
-                    },
-                }
-            );
+            await api.post("confessions/", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
 
+            // success handling
             navigate("/");
         } catch (err) {
             console.error(
@@ -419,27 +404,43 @@ function CreateConfession() {
                 err.response?.data || err
             );
 
-            const data = err.response?.data;
+            console.error(
+                "STATUS:",
+                err.response?.status
+            );
 
-            if (typeof data === "string") {
-                setError(data);
-            } else if (data?.detail) {
-                setError(data.detail);
-            } else if (data?.content) {
-                setError(
-                    Array.isArray(data.content)
-                        ? data.content[0]
-                        : data.content
-                );
-            } else if (data?.media) {
-                setError(
-                    Array.isArray(data.media)
-                        ? data.media[0]
-                        : data.media
-                );
+            console.error(
+                "FULL RESPONSE:",
+                err.response
+            );
+
+            const responseData = err?.response?.data;
+
+            if (responseData) {
+                if (typeof responseData === "string") {
+                    setError(responseData);
+                } else if (responseData.detail) {
+                    setError(responseData.detail);
+                } else if (responseData.content) {
+                    setError(
+                        Array.isArray(responseData.content)
+                            ? responseData.content.join(" ")
+                            : responseData.content
+                    );
+                } else if (responseData.media) {
+                    setError(
+                        Array.isArray(responseData.media)
+                            ? responseData.media.join(" ")
+                            : responseData.media
+                    );
+                } else {
+                    setError(
+                        "Unable to create your confession. Please check your post and try again."
+                    );
+                }
             } else {
                 setError(
-                    "Failed to post confession."
+                    "Unable to connect to the server. Please try again."
                 );
             }
         } finally {
@@ -929,11 +930,11 @@ function CreateConfession() {
                                             </div>
 
                                             <span className="text-sm font-bold text-gray-700 sm:text-base">
-                                                Add a 360° panorama
+                                                Add a panorama
                                             </span>
 
                                             <span className="mt-1 text-xs text-gray-400">
-                                                Equirectangular JPG, PNG or WEBP
+                                                360° equirectangular or wide panorama · JPG, PNG or WEBP
                                             </span>
 
                                             <span className="mt-0.5 text-[11px] text-gray-400">
@@ -1017,9 +1018,8 @@ function CreateConfession() {
                                             </span>
 
                                             <p className="text-xs leading-5 text-gray-500">
-                                                Upload a 360° equirectangular photo.
-                                                People will be able to drag or swipe around
-                                                the image after you post it.
+                                                Upload a true 360° photo or a wide/partial panorama.
+                                                360° photos can be explored around the scene, while wide panoramas can be explored horizontally.
                                             </p>
 
                                         </div>
